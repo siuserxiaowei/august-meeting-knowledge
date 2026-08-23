@@ -1,0 +1,125 @@
+---
+import ArchiveEmpty from '@/components/ArchiveEmpty.astro';
+import BaseLayout from '@/components/BaseLayout.astro';
+import MeetingCard from '@/components/MeetingCard.astro';
+import { loadMeetings, summarizeMeetings } from '@/lib/content';
+import { withBase } from '@/lib/paths';
+import { loadSyntheses } from '@/lib/syntheses';
+
+const meetings = await loadMeetings();
+const syntheses = await loadSyntheses(meetings.map(({ id }) => id));
+const summary = summarizeMeetings(meetings);
+const featured = meetings.slice(0, 3);
+const isFixture = Boolean(import.meta.env.MEETING_CONTENT_DIR?.includes('fixtures'));
+---
+
+<BaseLayout
+  title="八月会议知识场"
+  description="把 2026 年 8 月会议提炼成缺席者也能独立学习、复用并与 AI Agent 对话的公开知识档案。"
+  pageClass="home-page"
+>
+  <section class="hero shell" aria-labelledby="hero-title">
+    <div class="hero__rail" aria-hidden="true">
+      <span>二〇二六</span>
+      <span>八月辑</span>
+    </div>
+    <div class="hero__copy">
+      <p class="eyebrow"><span>ARCHIVE № 08</span> · 为所有没有在场的人</p>
+      <h1 id="hero-title" class="hero__title">
+        把缺席的时间，<br /><em>还原成可用的知识。</em>
+      </h1>
+      <p class="hero__intro">
+        这里不是逐字稿仓库。每场会议都被重新编成一份可以独立阅读、导入个人知识库，并继续交给 AI Agent 推演的学习材料。
+      </p>
+      <div class="hero__actions">
+        <a class="button button--primary" href={withBase('/meetings/', import.meta.env.BASE_URL)}>
+          浏览全部会议 <span aria-hidden="true">↗</span>
+        </a>
+        <a class="button button--quiet" href={withBase('/learning/', import.meta.env.BASE_URL)}>
+          从月度路径开始
+        </a>
+      </div>
+    </div>
+    <div class="hero__archive-mark" aria-hidden="true">
+      <span class="hero__big-number">08</span>
+      <span class="hero__stamp">公开<br />知识版</span>
+    </div>
+    <dl class="hero__stats" aria-label="知识库统计">
+      <div><dt>{summary.total}</dt><dd>场会议知识页</dd></div>
+      <div><dt>{summary.learningHours}</dt><dd>小时来源录音</dd></div>
+      <div><dt>5</dt><dd>层道法术器势</dd></div>
+    </dl>
+  </section>
+
+  {isFixture && (
+    <aside class="fixture-notice shell" aria-label="内容说明">
+      <strong>演示内容</strong>
+      <span>当前页面使用虚构 fixture 验证站点功能，不对应真实会议。</span>
+    </aside>
+  )}
+
+  <section class="manifesto shell" aria-labelledby="manifesto-title">
+    <div class="section-number" aria-hidden="true">壹</div>
+    <div>
+      <p class="eyebrow">WHY THIS ARCHIVE EXISTS</p>
+      <h2 id="manifesto-title">从“知道开过会”<br />到“知道如何接着做”</h2>
+    </div>
+    <div class="manifesto__body">
+      <p>缺席者通常收到一份时间线，却拿不到讨论背后的判断结构。这里把每场会重新组织为结论、证据、可迁移原则和行动入口。</p>
+      <ol class="manifesto__steps">
+        <li><span>01</span><strong>读懂</strong><small>一句话结论与核心讨论</small></li>
+        <li><span>02</span><strong>拆开</strong><small>道、法、术、器、势五层</small></li>
+        <li><span>03</span><strong>带走</strong><small>知识卡与 Agent Prompt</small></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="latest-section shell" aria-labelledby="latest-title">
+    <header class="section-heading">
+      <div>
+        <p class="eyebrow">LATEST FILES</p>
+        <h2 id="latest-title">最近入档</h2>
+      </div>
+      {meetings.length > 0 && (
+        <a class="text-link" href={withBase('/meetings/', import.meta.env.BASE_URL)}>
+          查看完整目录 <span aria-hidden="true">→</span>
+        </a>
+      )}
+    </header>
+    {featured.length > 0 ? (
+      <div class="meeting-stack">
+        {featured.map((meeting, index) => <MeetingCard meeting={meeting} index={index} />)}
+      </div>
+    ) : (
+      <ArchiveEmpty />
+    )}
+  </section>
+
+  <section class="five-lenses" aria-labelledby="lenses-title">
+    <div class="shell five-lenses__intro">
+      <p class="eyebrow">FIVE LENSES</p>
+      <h2 id="lenses-title">不只记录讲了什么，<br />还要看见它如何成立。</h2>
+    </div>
+    <ol class="five-lenses__grid shell">
+      <li><span>道</span><strong>方向</strong><p>这件事为何值得做，最终服务于什么。</p></li>
+      <li><span>法</span><strong>方法</strong><p>把目标变成可重复判断的基本路径。</p></li>
+      <li><span>术</span><strong>动作</strong><p>当下可以开始的小步骤与实践技巧。</p></li>
+      <li><span>器</span><strong>工具</strong><p>承载方法的系统、模板与 Agent。</p></li>
+      <li><span>势</span><strong>环境</strong><p>正在变化的条件、窗口与限制。</p></li>
+    </ol>
+  </section>
+
+  <section class="home-insights shell" aria-labelledby="home-insights-title">
+    <div>
+      <p class="eyebrow">MONTHLY SYNTHESIS</p>
+      <h2 id="home-insights-title">从单场纪要，<br />走向跨会议的共同地图。</h2>
+    </div>
+    <div class="home-insights__body">
+      <p>月度洞察连接多场公开知识页，提炼反复出现的共同问题、方法、边界与 Agent 对话入口；每一条关联仍可回到单场页面核对。</p>
+      <p class="home-insights__count"><strong>{syntheses.length}</strong><span>份综合洞察已公开</span></p>
+      <a class="button button--primary" href={withBase('/insights/', import.meta.env.BASE_URL)}>
+        查看月度洞察 <span aria-hidden="true">↗</span>
+      </a>
+    </div>
+  </section>
+</BaseLayout>

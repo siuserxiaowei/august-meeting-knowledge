@@ -1,0 +1,201 @@
+---
+import BaseLayout from '@/components/BaseLayout.astro';
+import MeetingCard from '@/components/MeetingCard.astro';
+import { loadMeetings, type Meeting } from '@/lib/content';
+import { withBase } from '@/lib/paths';
+import { loadSyntheses, type Synthesis } from '@/lib/syntheses';
+
+interface Props {
+  synthesis: Synthesis;
+  relatedMeetings: Meeting[];
+}
+
+export async function getStaticPaths() {
+  const meetings = await loadMeetings();
+  const meetingById = new Map(meetings.map((meeting) => [meeting.id, meeting]));
+  const syntheses = await loadSyntheses(meetings.map(({ id }) => id));
+
+  return syntheses.map((synthesis) => ({
+    params: { id: synthesis.id },
+    props: {
+      synthesis,
+      relatedMeetings: synthesis.relatedMeetings.map((id) => meetingById.get(id) as Meeting)
+    }
+  }));
+}
+
+const { synthesis, relatedMeetings } = Astro.props as Props;
+const fiveLayers = ['dao', 'fa', 'shu', 'qi', 'shi'] as const;
+const promptPackage = [
+  `【综合背景】\n${synthesis.agentKit.context}`,
+  `【主提示词】\n${synthesis.agentKit.prompt}`,
+  synthesis.agentKit.questions.length
+    ? `【可继续追问】\n${synthesis.agentKit.questions.map((question, index) => `${index + 1}. ${question}`).join('\n')}`
+    : '',
+  synthesis.agentKit.knowledgeCards.length
+    ? `【知识卡】\n${synthesis.agentKit.knowledgeCards.map((card) => `${card.name}：${card.content}`).join('\n')}`
+    : ''
+].filter(Boolean).join('\n\n');
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: synthesis.title,
+  description: synthesis.abstract,
+  inLanguage: 'zh-CN',
+  isAccessibleForFree: true,
+  articleSection: synthesis.sections.map(({ heading }) => heading),
+  keywords: synthesis.tags.join(', '),
+  audience: synthesis.audience.map((audienceType) => ({
+    '@type': 'Audience',
+    audienceType
+  })),
+  isBasedOn: relatedMeetings.map((meeting) => ({
+    '@type': 'Article',
+    name: meeting.title,
+    url: new URL(
+      withBase(`/meetings/${meeting.id}/`, import.meta.env.BASE_URL),
+      Astro.site ?? Astro.url.origin
+    ).href
+  })),
+  publisher: { '@type': 'Organization', name: '八月会议知识场' }
+};
+const jsonLd = JSON.stringify(structuredData).replace(/</g, '\\u003c');
+---
+
+<BaseLayout title={synthesis.title} description={synthesis.abstract} pageClass="synthesis-detail-page">
+  <script slot="head" type="application/ld+json" is:inline set:html={jsonLd} />
+
+  <nav class="breadcrumb shell" aria-label="面包屑">
+    <a href={withBase('/insights/', import.meta.env.BASE_URL)}>月度洞察</a>
+    <span aria-hidden="true">／</span>
+    <span aria-current="page">{synthesis.title}</span>
+  </nav>
+
+  <article class="synthesis-detail shell">
+    <header class="synthesis-masthead">
+      <div class="synthesis-masthead__mark" aria-hidden="true">洞</div>
+      <div class="synthesis-masthead__copy">
+        <p class="eyebrow">MONTHLY SYNTHESIS · AUGUST 2026</p>
+        <h1>{synthesis.title}</h1>
+        <p class="synthesis-masthead__abstract">{synthesis.abstract}</p>
+        <ul class="tag-list" aria-label="标签">
+          {synthesis.tags.map((tag) => <li>{tag}</li>)}
+        </ul>
+      </div>
+      <aside class="synthesis-audience-note">
+        <span>适合谁读</span>
+        <ul>{synthesis.audience.map((item) => <li>{item}</li>)}</ul>
+      </aside>
+    </header>
+
+    <div class="detail-grid">
+      <aside class="detail-toc" aria-label="本页目录">
+        <p class="eyebrow">IN THIS INSIGHT</p>
+        <ol>
+          <li><a href="#audience">阅读入口</a></li>
+          <li><a href="#synthesis-sections">综合章节</a></li>
+          <li><a href="#five-layers">道法术器势</a></li>
+          <li><a href="#agent-kit">Agent 对流</a></li>
+          <li><a href="#related-meetings">关联会议</a></li>
+          <li><a href="#evidence">验证与局限</a></li>
+        </ol>
+      </aside>
+
+      <div class="detail-content">
+        <section id="audience" class="content-section synthesis-audience-section">
+          <div class="content-section__label"><span>01</span><h2>从这里开始读</h2></div>
+          <ul>
+            {synthesis.audience.map((item, index) => (
+              <li><span>{String(index + 1).padStart(2, '0')}</span><p>{item}</p></li>
+            ))}
+          </ul>
+        </section>
+
+        <section id="synthesis-sections" class="content-section synthesis-sections">
+          <div class="content-section__label"><span>02</span><h2>综合章节</h2></div>
+          <div class="synthesis-sections__list">
+            {synthesis.sections.map((section, index) => (
+              <article>
+                <span class="folio">洞 {String(index + 1).padStart(2, '0')}</span>
+                <h3>{section.heading}</h3>
+                <p>{section.summary}</p>
+                <h4>可以带走</h4>
+                <ul>{section.takeaways.map((takeaway) => <li>{takeaway}</li>)}</ul>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section id="five-layers" class="content-section five-layers-detail">
+          <div class="content-section__label"><span>03</span><h2>道 · 法 · 术 · 器 · 势</h2></div>
+          <ol>
+            {fiveLayers.map((key, index) => {
+              const layer = synthesis.daoFaShuQiShi[key];
+              return <li><span>{layer.label}</span><small>0{index + 1}</small><p>{layer.summary}</p></li>;
+            })}
+          </ol>
+        </section>
+
+        <section id="agent-kit" class="content-section agent-kit" data-agent-kit>
+          <div class="content-section__label"><span>04</span><h2>带去和 Agent 对流</h2></div>
+          <div class="agent-kit__panel">
+            <div class="agent-kit__mark" aria-hidden="true">AI<br />综思</div>
+            <div>
+              <p class="eyebrow">SYNTHESIS PROMPT KIT</p>
+              <h3>把共同结构带进你的真实问题</h3>
+              <p>{synthesis.agentKit.context}</p>
+              <blockquote>{synthesis.agentKit.prompt}</blockquote>
+              <div class="agent-kit__actions">
+                <button class="button button--primary" type="button" data-copy-prompt>复制综合 Agent Prompt</button>
+                <p role="status" aria-live="polite" data-copy-status></p>
+              </div>
+              <textarea class="visually-hidden" readonly data-prompt-source aria-label="综合 Agent Prompt 文本">{promptPackage}</textarea>
+            </div>
+          </div>
+          {synthesis.agentKit.questions.length > 0 && (
+            <div class="synthesis-questions">
+              <h3>继续追问</h3>
+              <ol>{synthesis.agentKit.questions.map((question) => <li>{question}</li>)}</ol>
+            </div>
+          )}
+          {synthesis.agentKit.knowledgeCards.length > 0 && (
+            <div class="knowledge-cards">
+              {synthesis.agentKit.knowledgeCards.map((card) => (
+                <article><h3>{card.name}</h3><p>{card.content}</p></article>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section id="related-meetings" class="content-section related-meetings">
+          <div class="content-section__label"><span>05</span><h2>回到关联会议</h2></div>
+          <p class="section-intro">综合结论只是导航层。需要核对具体语境、来源锚点或内容局限时，请回到对应的单场知识页。</p>
+          <div class="meeting-stack">
+            {relatedMeetings.map((meeting, index) => (
+              <MeetingCard meeting={meeting} index={index} />
+            ))}
+          </div>
+        </section>
+
+        <section id="evidence" class="content-section evidence-section">
+          <div class="content-section__label"><span>06</span><h2>验证与局限</h2></div>
+          <div class="evidence-grid synthesis-evidence-grid">
+            <div>
+              <h3>待验证主张</h3>
+              {synthesis.claimsToVerify.length > 0 ? (
+                <ul>{synthesis.claimsToVerify.map((claim) => <li>{claim}</li>)}</ul>
+              ) : (
+                <p>这份综合洞察没有单列待验证主张。</p>
+              )}
+            </div>
+            <div>
+              <h3>适用局限</h3>
+              <ul>{synthesis.limitations.map((limitation) => <li>{limitation}</li>)}</ul>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </article>
+  <script src="../../scripts/copy-prompt.ts"></script>
+</BaseLayout>

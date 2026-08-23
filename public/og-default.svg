@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#f1ead8"/>
+  <path d="M0 104h1200M0 526h1200" stroke="#1e2826" stroke-width="2"/>
+  <path d="M105 0v630M1095 0v630" stroke="#1e2826" stroke-width="1" opacity=".35"/>
+  <text x="112" y="83" font-size="22" fill="#a83824" font-family="Songti SC" letter-spacing="8">AUGUST KNOWLEDGE ARCHIVE · 2026</text>
+  <text x="112" y="294" font-size="94" fill="#19211f" font-family="Songti SC" font-weight="700">八月会议知识场</text>
+  <text x="116" y="366" font-size="33" fill="#45504c" font-family="Songti SC" letter-spacing="3">把缺席的时间，还原成可用的知识。</text>
+  <rect x="932" y="160" width="118" height="160" rx="3" fill="none" stroke="#a83824" stroke-width="6"/>
+  <text x="991" y="222" text-anchor="middle" font-size="42" fill="#a83824" font-family="Songti SC">会</text>
+  <text x="991" y="278" text-anchor="middle" font-size="42" fill="#a83824" font-family="Songti SC">知</text>
+  <text x="112" y="575" font-size="18" fill="#45504c" font-family="Songti SC">PUBLIC KNOWLEDGE EDITION · 人类可读 / AGENT 可用</text>
+</svg>

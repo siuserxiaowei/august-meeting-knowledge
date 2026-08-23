@@ -1,0 +1,24 @@
+---
+import BaseLayout from '@/components/BaseLayout.astro';
+import { withBase } from '@/lib/paths';
+---
+
+<BaseLayout
+  title="未找到档案"
+  description="请求的会议知识档案尚未收录。"
+  noindex
+  pageClass="not-found-page"
+>
+  <section class="not-found shell">
+    <div class="not-found__number" aria-hidden="true">四〇四</div>
+    <div>
+      <p class="eyebrow">FILE NOT FOUND</p>
+      <h1>这卷档案尚未收录</h1>
+      <p>可能是地址有误，或这份会议知识仍在编校。你可以回到知识场，或从八月目录重新查找。</p>
+      <div class="hero__actions">
+        <a class="button button--primary" href={withBase('/', import.meta.env.BASE_URL)}>返回知识场</a>
+        <a class="button button--quiet" href={withBase('/meetings/', import.meta.env.BASE_URL)}>查看会议目录</a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

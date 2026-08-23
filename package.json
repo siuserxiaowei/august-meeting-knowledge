@@ -1,0 +1,38 @@
+{
+  "name": "august-meeting-knowledge-field",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "prebuild": "npm run content:check",
+    "build": "astro build",
+    "build:fixtures": "MEETING_CONTENT_DIR=tests/fixtures/content SYNTHESIS_CONTENT_DIR=tests/fixtures/syntheses astro build",
+    "preview": "astro preview",
+    "preview:test": "node scripts/static-preview.mjs",
+    "check": "astro check",
+    "test": "npm run test:content && npm run test:site",
+    "test:site": "vitest run",
+    "test:content": "node --test test/*.test.mjs",
+    "test:coverage": "npm run test:content:coverage && npm run test:site:coverage",
+    "test:site:coverage": "vitest run --coverage",
+    "test:content:coverage": "node --test --experimental-test-coverage --test-coverage-include='scripts/content-quality/*.mjs' --test-coverage-lines=80 --test-coverage-functions=80 --test-coverage-branches=80 test/*.test.mjs",
+    "test:e2e": "npm run test:e2e:fixtures && npm run test:e2e:real",
+    "test:e2e:fixtures": "playwright test --config=playwright.config.ts",
+    "test:e2e:real": "playwright test --config=playwright.real.config.ts",
+    "content:check": "node scripts/content-quality/cli.mjs content/meetings",
+    "content:check:json": "node scripts/content-quality/cli.mjs content/meetings --format json"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "@astrojs/check": "latest",
+    "@playwright/test": "latest",
+    "@types/node": "latest",
+    "@vitest/coverage-v8": "latest",
+    "astro": "latest",
+    "typescript": "latest",
+    "vitest": "latest"
+  }
+}

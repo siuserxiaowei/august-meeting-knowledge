@@ -1,0 +1,22 @@
+---
+import { withBase } from '@/lib/paths';
+const base = import.meta.env.BASE_URL;
+---
+
+<footer class="site-footer">
+  <div class="shell site-footer__grid">
+    <div>
+      <p class="eyebrow">PUBLIC KNOWLEDGE EDITION</p>
+      <p class="site-footer__statement">保留观点的边界，也保留继续发问的入口。</p>
+    </div>
+    <div class="site-footer__notes">
+      <p>公开页仅含独立提炼，不收录私有逐字稿和资源标识。</p>
+      <a href={withBase('/meetings/', base)}>查阅会议目录 <span aria-hidden="true">↗</span></a>
+      <a href={withBase('/insights/', base)}>阅读月度洞察 <span aria-hidden="true">↗</span></a>
+      <a href={withBase('/coverage/', base)}>核对覆盖与边界 <span aria-hidden="true">↗</span></a>
+    </div>
+  </div>
+  <div class="site-footer__rule" aria-hidden="true">
+    <span>道</span><span>法</span><span>术</span><span>器</span><span>势</span>
+  </div>
+</footer>

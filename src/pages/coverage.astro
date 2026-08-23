@@ -1,0 +1,102 @@
+---
+import BaseLayout from '@/components/BaseLayout.astro';
+import { loadMeetings, summarizeMeetings } from '@/lib/content';
+import { withBase } from '@/lib/paths';
+
+const meetings = await loadMeetings();
+const summary = summarizeMeetings(meetings);
+const searchedMeetingCount = 2;
+const meetingsWithoutArtifacts = 2;
+const checkedThrough = '2026-08-24';
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'Dataset',
+  name: '2026 年 8 月公开会议知识覆盖台账',
+  description: '2026 年 8 月 1 日至 24 日可访问飞书妙记的公开知识页覆盖、质量状态与排除边界。',
+  temporalCoverage: `2026-08-01/${checkedThrough}`,
+  inLanguage: 'zh-CN',
+  isAccessibleForFree: true,
+  measurementTechnique: '飞书妙记与历史会议只读检索、私有映射集合核对、公开内容质量门禁'
+};
+const jsonLd = JSON.stringify(structuredData).replace(/</g, '\\u003c');
+---
+
+<BaseLayout
+  title="覆盖与边界"
+  description="查看 2026 年 8 月会议知识站的检索范围、30 条妙记覆盖、质量状态和未生成页面的原因。"
+  pageClass="coverage-page"
+>
+  <script slot="head" type="application/ld+json" is:inline set:html={jsonLd} />
+
+  <header class="page-hero shell">
+    <div class="section-number" aria-hidden="true">界</div>
+    <div>
+      <p class="eyebrow">COVERAGE &amp; EVIDENCE BOUNDARY</p>
+      <h1>覆盖与边界</h1>
+      <p>这份台账解释哪些资料被做成页面、哪些没有，以及每种状态允许读者得出什么结论。</p>
+    </div>
+    <dl class="catalogue-summary" aria-label="覆盖摘要">
+      <div><dt>{summary.total}</dt><dd>条可访问妙记</dd></div>
+      <div><dt>{summary.partial}</dt><dd>部分提炼</dd></div>
+      <div><dt>{summary.insufficient}</dt><dd>证据不足</dd></div>
+    </dl>
+  </header>
+
+  <article class="coverage-ledger shell">
+    <section class="content-section" aria-labelledby="coverage-result">
+      <div class="content-section__label"><span>01</span><h2 id="coverage-result">核对结果</h2></div>
+      <div class="coverage-grid">
+        <article>
+          <p class="folio">{summary.total} ↔ {summary.total}</p>
+          <h3>可访问妙记与公开页一一对应</h3>
+          <p>截至 {checkedThrough}，按当前飞书用户的所有者与参与者范围检索 2026 年 8 月 1—24 日妙记，共得到 {summary.total} 条唯一记录。它们与私有来源映射和公开会议 JSON 集合核对后，新增缺失为 0、陈旧映射为 0。</p>
+        </article>
+        <article>
+          <p class="folio">{summary.complete} / {summary.partial} / {summary.insufficient}</p>
+          <h3>完整 / 部分 / 证据不足</h3>
+          <p>当前没有页面被标成 complete。{summary.partial} 页只覆盖可公开且有证据的位置；{summary.insufficient} 页明确记录转写为空、极短或无法归因等缺口。页面流畅不代表资料完整。</p>
+        </article>
+        <article>
+          <p class="folio">{searchedMeetingCount} → 0</p>
+          <h3>无产物会议不制造正文</h3>
+          <p>同一时段的历史 VC 检索还返回 {searchedMeetingCount} 场会议。详情查询全部成功，但其中 {meetingsWithoutArtifacts} 场都没有可访问的智能纪要引用或妙记录制引用，因此不生成知识正文，也不按标题推断议题。</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="content-section" aria-labelledby="coverage-method">
+      <div class="content-section__label"><span>02</span><h2 id="coverage-method">如何建立覆盖</h2></div>
+      <ol class="coverage-method">
+        <li><span>01</span><div><h3>分别检索两个集合</h3><p>历史会议使用 VC 时间范围检索；妙记按“我拥有”与“我作为参与者”分别检索后去重。两者不是同一种产物，不能互相替代。</p></div></li>
+        <li><span>02</span><div><h3>从原始 Transcript 独立提炼</h3><p>总结基于原始文字记录，而不是复制飞书 AI 总结。原始逐字稿、资源标识和私有链接只留在仓库外的私有目录。</p></div></li>
+        <li><span>03</span><div><h3>用状态与锚点限制主张</h3><p>每个具体主题和讨论都要能回到公开时间锚点；没有连续证据时降级为 partial 或 insufficient，不用背景媒体、标题或常识补齐。</p></div></li>
+        <li><span>04</span><div><h3>公开前做集合与隐私门禁</h3><p>文件名、slug、日期、状态、锚点闭包、重复页、联系方式、凭证、私有 URL、资源标识和敏感业务信息均接受自动检查，再由独立审阅补足语义判断。</p></div></li>
+      </ol>
+    </section>
+
+    <section class="content-section" aria-labelledby="coverage-interpretation">
+      <div class="content-section__label"><span>03</span><h2 id="coverage-interpretation">怎样正确使用这些页面</h2></div>
+      <div class="evidence-grid coverage-usage">
+        <div>
+          <h3>可以做</h3>
+          <ul>
+            <li>把公开页作为缺席者的学习入口和个人知识库素材。</li>
+            <li>沿来源锚点、局限和待核验主张判断结论强度。</li>
+            <li>复制 Agent Prompt，把知识映射到自己的真实项目与证据。</li>
+            <li>把道法术器势当作分析视角，而不是会上已经批准的共同结论。</li>
+          </ul>
+        </div>
+        <div>
+          <h3>不应做</h3>
+          <ul>
+            <li>把 partial 页面当作完整议程、逐字稿或正式决议。</li>
+            <li>从 insufficient 页面、文件标题或相邻分段补写会议内容。</li>
+            <li>把会上出现的价格、性能、平台规则或商业数字当成当前事实。</li>
+            <li>用公开页恢复个人身份、客户、供应商、账号、财务或其他私有上下文。</li>
+          </ul>
+        </div>
+      </div>
+      <p class="coverage-cta"><a class="button button--primary" href={withBase('/meetings/', import.meta.env.BASE_URL)}>进入 30 条会议目录 <span aria-hidden="true">↗</span></a></p>
+    </section>
+  </article>
+</BaseLayout>

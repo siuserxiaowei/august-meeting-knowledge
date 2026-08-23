@@ -1,0 +1,197 @@
+---
+import BaseLayout from '@/components/BaseLayout.astro';
+import {
+  buildMeetingAgentPackage,
+  confidenceLabels,
+  formatDate,
+  loadMeetings,
+  statusLabels,
+  type Meeting
+} from '@/lib/content';
+import { withBase } from '@/lib/paths';
+
+export async function getStaticPaths() {
+  const meetings = await loadMeetings();
+  return meetings.map((meeting) => ({ params: { id: meeting.id }, props: { meeting } }));
+}
+
+const { meeting } = Astro.props as { meeting: Meeting };
+const fiveLayers = ['dao', 'fa', 'shu', 'qi', 'shi'] as const;
+const promptPackage = buildMeetingAgentPackage(meeting);
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: meeting.title,
+  description: meeting.abstract,
+  datePublished: meeting.date,
+  inLanguage: 'zh-CN',
+  isAccessibleForFree: true,
+  keywords: meeting.tags.join(', '),
+  publisher: { '@type': 'Organization', name: '八月会议知识场' }
+};
+---
+
+<BaseLayout title={meeting.title} description={meeting.abstract} pageClass="meeting-detail-page">
+  <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(structuredData)} />
+
+  <nav class="breadcrumb shell" aria-label="面包屑">
+    <a href={withBase('/meetings/', import.meta.env.BASE_URL)}>会议目录</a>
+    <span aria-hidden="true">／</span>
+    <span aria-current="page">{meeting.title}</span>
+  </nav>
+
+  <article class="meeting-detail shell">
+    <header class="meeting-masthead">
+      <div class="meeting-masthead__date" aria-hidden="true">
+        <span>{meeting.date.slice(-2)}</span>
+        <small>AUG</small>
+      </div>
+      <div class="meeting-masthead__copy">
+        <div class="meeting-card__meta">
+          <time datetime={meeting.date}>{formatDate(meeting.date)}</time>
+          <span class:list={['status-chip', `status-chip--${meeting.contentStatus}`]}>{statusLabels[meeting.contentStatus]}</span>
+          <span>{confidenceLabels[meeting.confidence]}</span>
+          <span>{meeting.duration}</span>
+        </div>
+        <h1>{meeting.title}</h1>
+        <p class="meeting-masthead__abstract">{meeting.abstract}</p>
+        <ul class="tag-list" aria-label="标签">{meeting.tags.map((tag) => <li>{tag}</li>)}</ul>
+      </div>
+      <aside class="absence-note">
+        <span>给缺席者</span>
+        <p>{meeting.forAbsentees}</p>
+      </aside>
+    </header>
+
+    <div class="detail-grid">
+      <aside class="detail-toc" aria-label="本页目录">
+        <p class="eyebrow">IN THIS FILE</p>
+        <ol>
+          <li><a href="#goals">学习目标</a></li>
+          <li><a href="#discussion">核心讨论</a></li>
+          <li><a href="#knowledge">可迁移知识</a></li>
+          <li><a href="#five-layers">道法术器势</a></li>
+          <li><a href="#actions">行动清单</a></li>
+          <li><a href="#agent-kit">Agent 对流</a></li>
+          <li><a href="#evidence">证据与边界</a></li>
+        </ol>
+      </aside>
+
+      <div class="detail-content">
+        <section id="goals" class="content-section learning-goals-section">
+          <div class="content-section__label"><span>01</span><h2>读完你会获得</h2></div>
+          <ol class="learning-goals">
+            {meeting.learningGoals.map((goal, index) => <li><span>{index + 1}</span>{goal}</li>)}
+          </ol>
+        </section>
+
+        <section id="discussion" class="content-section">
+          <div class="content-section__label"><span>02</span><h2>核心讨论</h2></div>
+          <div class="topic-index">
+            {meeting.coreTopics.map((topic) => (
+              <article>
+                <time>{topic.anchor}</time>
+                <h3>{topic.title}</h3>
+                <p>{topic.explanation}</p>
+              </article>
+            ))}
+          </div>
+          <div class="discussion-flow">
+            {meeting.discussion.map((section) => (
+              <article>
+                <h3>{section.heading}</h3>
+                <p>{section.narrative}</p>
+                <p class="anchors">证据锚点：{section.anchors.join(' · ')}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section id="knowledge" class="content-section">
+          <div class="content-section__label"><span>03</span><h2>可迁移知识</h2></div>
+          <div class="knowledge-ledger">
+            {meeting.transferableKnowledge.map((item, index) => (
+              <article>
+                <span class="folio">知 {String(index + 1).padStart(2, '0')}</span>
+                <h3>{item.principle}</h3>
+                <dl>
+                  <div><dt>为什么重要</dt><dd>{item.whyItMatters}</dd></div>
+                  <div><dt>怎么使用</dt><dd>{item.howToUse}</dd></div>
+                  <div><dt>适用边界</dt><dd>{item.boundary}</dd></div>
+                </dl>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section id="five-layers" class="content-section five-layers-detail">
+          <div class="content-section__label"><span>04</span><h2>道 · 法 · 术 · 器 · 势</h2></div>
+          <ol>
+            {fiveLayers.map((key, index) => {
+              const layer = meeting.daoFaShuQiShi[key];
+              return <li><span>{layer.label}</span><small>0{index + 1}</small><p>{layer.summary}</p></li>;
+            })}
+          </ol>
+        </section>
+
+        <section id="actions" class="content-section">
+          <div class="content-section__label"><span>05</span><h2>行动清单</h2></div>
+          <div class="action-table" role="table" aria-label="行动清单">
+            <div class="action-table__row action-table__head" role="row">
+              <span role="columnheader">行动</span><span role="columnheader">谁来做</span><span role="columnheader">时间</span><span role="columnheader">完成信号</span>
+            </div>
+            {meeting.actions.map((item) => (
+              <div class="action-table__row" role="row">
+                <strong role="cell">{item.action}</strong><span role="cell">{item.owner}</span><span role="cell">{item.when}</span><span role="cell">{item.success}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section id="agent-kit" class="content-section agent-kit" data-agent-kit>
+          <div class="content-section__label"><span>06</span><h2>带去和 Agent 对流</h2></div>
+          <div class="agent-kit__panel">
+            <div class="agent-kit__mark" aria-hidden="true">AI<br />对流</div>
+            <div>
+              <p class="eyebrow">READY-TO-USE CONTEXT</p>
+              <h3>把这场会变成你的下一轮思考</h3>
+              <p>{meeting.agentKit.context}</p>
+              <blockquote>{meeting.agentKit.prompt}</blockquote>
+              <div class="agent-kit__actions">
+                <button class="button button--primary" type="button" data-copy-prompt>复制 Agent Prompt</button>
+                <small>复制包同时携带公开来源状态、知识卡、待核验主张、局限与证据锚点。</small>
+                <p role="status" aria-live="polite" data-copy-status></p>
+              </div>
+              <textarea class="visually-hidden" readonly data-prompt-source aria-label="Agent Prompt 文本">{promptPackage}</textarea>
+            </div>
+          </div>
+          {meeting.agentKit.knowledgeCards.length > 0 && (
+            <div class="knowledge-cards">
+              {meeting.agentKit.knowledgeCards.map((card) => <article><h3>{card.name}</h3><p>{card.content}</p></article>)}
+            </div>
+          )}
+        </section>
+
+        <section id="evidence" class="content-section evidence-section">
+          <div class="content-section__label"><span>07</span><h2>证据与边界</h2></div>
+          <div class="evidence-grid">
+            <div>
+              <h3>来源时间锚点</h3>
+              <ul>{meeting.sourceAnchors.map((anchor) => <li><time>{anchor.time}</time><span>{anchor.note}</span></li>)}</ul>
+            </div>
+            <div>
+              <h3>待验证主张</h3>
+              {meeting.claimsToVerify.length ? <ul>{meeting.claimsToVerify.map((claim) => <li>{claim}</li>)}</ul> : <p>本场没有单列待验证主张。</p>}
+            </div>
+            <div>
+              <h3>局限与脱敏</h3>
+              <ul>{meeting.limitations.map((limitation) => <li>{limitation}</li>)}</ul>
+              <p><strong>隐私处理：</strong>{meeting.privacy}</p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </article>
+  <script src="../../scripts/copy-prompt.ts"></script>
+</BaseLayout>

@@ -1,0 +1,74 @@
+---
+import ArchiveEmpty from '@/components/ArchiveEmpty.astro';
+import BaseLayout from '@/components/BaseLayout.astro';
+import MeetingCard from '@/components/MeetingCard.astro';
+import { loadMeetings, summarizeMeetings } from '@/lib/content';
+import { deriveTags } from '@/lib/search';
+
+const meetings = await loadMeetings();
+const summary = summarizeMeetings(meetings);
+const tags = deriveTags(meetings);
+---
+
+<BaseLayout
+  title="会议目录"
+  description="检索和筛选 2026 年 8 月会议知识页，查找结论、行动、标签和 Agent 对话入口。"
+  pageClass="archive-page"
+>
+  <header class="page-hero page-hero--archive shell">
+    <div class="section-number" aria-hidden="true">目</div>
+    <div>
+      <p class="eyebrow">AUGUST 2026 · CATALOGUE</p>
+      <h1>八月会议目录</h1>
+      <p>按关键词或标签穿过整月讨论。搜索范围覆盖标题、摘要、缺席者结论、核心主题与标签。</p>
+    </div>
+    <dl class="catalogue-summary" aria-label="目录状态">
+      <div><dt>{summary.total}</dt><dd>全部会议</dd></div>
+      <div><dt>{summary.complete}</dt><dd>完整提炼</dd></div>
+      <div><dt>{summary.partial + summary.insufficient}</dt><dd>有局限说明</dd></div>
+    </dl>
+  </header>
+
+  {meetings.length > 0 ? (
+    <section class="catalogue shell" aria-label="会议检索与结果">
+      <div class="catalogue__tools">
+        <label class="search-field">
+          <span>全文检索</span>
+          <span class="search-field__input">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 5 5"></path></svg>
+            <input type="search" aria-label="搜索会议知识" data-archive-search placeholder="输入主题、方法或行动……" autocomplete="off" />
+          </span>
+        </label>
+        <fieldset class="tag-filter">
+          <legend>标签筛选</legend>
+          <div>
+            {tags.map((tag) => (
+              <button type="button" data-tag-filter={tag.name} aria-pressed="false">
+                {tag.name} <span>{tag.count}</span>
+              </button>
+            ))}
+          </div>
+        </fieldset>
+      </div>
+
+      <div class="catalogue__bar">
+        <p role="status" aria-live="polite" data-result-status>找到 {meetings.length} 场会议</p>
+        <button type="button" class="clear-filter" data-clear-filters hidden>清空筛选</button>
+      </div>
+
+      <div class="meeting-stack">
+        {meetings.map((meeting, index) => (
+          <MeetingCard meeting={meeting} index={index} searchable />
+        ))}
+      </div>
+
+      <div class="no-results ruled-panel" data-no-results hidden>
+        <p class="folio" aria-hidden="true">空</p>
+        <div><h2>没有对应的档案</h2><p>换一个关键词，或清空标签后再试。</p></div>
+      </div>
+    </section>
+  ) : (
+    <div class="shell"><ArchiveEmpty /></div>
+  )}
+  <script src="../../scripts/archive.ts"></script>
+</BaseLayout>

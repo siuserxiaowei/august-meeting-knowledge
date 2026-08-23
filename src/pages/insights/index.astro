@@ -1,0 +1,93 @@
+---
+import BaseLayout from '@/components/BaseLayout.astro';
+import SynthesisCard from '@/components/SynthesisCard.astro';
+import { loadMeetings } from '@/lib/content';
+import { withBase } from '@/lib/paths';
+import { loadSyntheses } from '@/lib/syntheses';
+
+const meetings = await loadMeetings();
+const syntheses = await loadSyntheses(meetings.map(({ id }) => id));
+const relatedMeetingCount = new Set(syntheses.flatMap(({ relatedMeetings }) => relatedMeetings)).size;
+const pageUrl = new URL(withBase('/insights/', import.meta.env.BASE_URL), Astro.site ?? Astro.url.origin);
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: '月度洞察',
+  description: '跨会议整理 2026 年 8 月的共同问题、方法、边界与可继续交给 AI Agent 推演的知识结构。',
+  inLanguage: 'zh-CN',
+  isAccessibleForFree: true,
+  url: pageUrl.href,
+  mainEntity: {
+    '@type': 'ItemList',
+    numberOfItems: syntheses.length,
+    itemListElement: syntheses.map((synthesis, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: synthesis.title,
+      url: new URL(
+        withBase(`/insights/${synthesis.id}/`, import.meta.env.BASE_URL),
+        Astro.site ?? Astro.url.origin
+      ).href
+    }))
+  }
+};
+const jsonLd = JSON.stringify(structuredData).replace(/</g, '\\u003c');
+---
+
+<BaseLayout
+  title="月度洞察"
+  description="跨会议整理 2026 年 8 月的共同问题、方法、边界与可继续交给 AI Agent 推演的知识结构。"
+  pageClass="insights-page"
+>
+  <script slot="head" type="application/ld+json" is:inline set:html={jsonLd} />
+
+  <header class="page-hero page-hero--insights shell">
+    <div class="section-number" aria-hidden="true">察</div>
+    <div>
+      <p class="eyebrow">AUGUST 2026 · MONTHLY SYNTHESIS</p>
+      <h1>月度洞察</h1>
+      <p>把多场会议放回同一张地图：辨认反复出现的问题、可迁移的方法和仍需验证的边界，再带进自己的知识库继续推演。</p>
+    </div>
+    <dl class="catalogue-summary" aria-label="月度洞察状态">
+      <div><dt>{syntheses.length}</dt><dd>综合洞察</dd></div>
+      <div><dt>{relatedMeetingCount}</dt><dd>关联会议</dd></div>
+      <div><dt>5</dt><dd>层分析视角</dd></div>
+    </dl>
+  </header>
+
+  <section class="insights-manifesto shell" aria-labelledby="insights-method-title">
+    <p class="eyebrow">HOW TO READ</p>
+    <h2 id="insights-method-title">先读共同结构，<br />再回到单场证据。</h2>
+    <div>
+      <p>综合页不是替代单场纪要，也不把会议中的经验判断包装成事实。它提供跨会议阅读入口；具体语境和证据边界仍应回到关联会议核对。</p>
+      <a class="text-link" href={withBase('/meetings/', import.meta.env.BASE_URL)}>
+        查阅全部会议 <span aria-hidden="true">→</span>
+      </a>
+    </div>
+  </section>
+
+  {syntheses.length > 0 ? (
+    <section class="synthesis-catalogue shell" aria-labelledby="synthesis-list-title">
+      <header class="section-heading">
+        <div>
+          <p class="eyebrow">SYNTHESIS FILES</p>
+          <h2 id="synthesis-list-title">综合档案</h2>
+        </div>
+      </header>
+      <div class="synthesis-stack">
+        {syntheses.map((synthesis, index) => (
+          <SynthesisCard synthesis={synthesis} index={index} />
+        ))}
+      </div>
+    </section>
+  ) : (
+    <section class="shell synthesis-empty ruled-panel" aria-labelledby="synthesis-empty-title">
+      <p class="folio" aria-hidden="true">候</p>
+      <div>
+        <h2 id="synthesis-empty-title">月度洞察正在整理</h2>
+        <p>单场会议知识页仍可正常阅读。综合内容通过公开结构和关联校验后，会在这里出现。</p>
+        <a class="text-link" href={withBase('/meetings/', import.meta.env.BASE_URL)}>先浏览会议目录</a>
+      </div>
+    </section>
+  )}
+</BaseLayout>

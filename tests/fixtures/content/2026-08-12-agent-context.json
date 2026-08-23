@@ -1,0 +1,48 @@
+{
+  "id": "2026-08-12-agent-context",
+  "sourceTitle": "演示会议：Agent 上下文",
+  "title": "把讨论变成 Agent 可读上下文",
+  "date": "2026-08-12",
+  "duration": "01:12:00",
+  "sourceType": "minutes",
+  "contentStatus": "complete",
+  "confidence": "high",
+  "abstract": "这份演示内容把 Agent 上下文拆成背景、任务、约束、证据和输出标准五个部分，并说明为什么只复制一段摘要往往不足以支持可靠对话。重点是让 Agent 知道哪些是会议观点、哪些仍待验证。",
+  "forAbsentees": "给 Agent 的不只是结论，还要提供结论成立的边界、证据状态与希望它完成的任务。",
+  "learningGoals": ["组装五段式 Agent 上下文", "区分会议观点与已核实事实", "设计能继续追问的问题"],
+  "coreTopics": [
+    {"title": "五段式上下文", "explanation": "背景、任务、约束、证据与输出标准共同限制 Agent 的回答空间。", "anchor": "00:08:30"},
+    {"title": "不确定性标注", "explanation": "把经验判断和待验证主张显式写入上下文。", "anchor": "00:31:15"}
+  ],
+  "transferableKnowledge": [
+    {"principle": "上下文必须包含边界", "whyItMatters": "没有边界的摘要容易被 Agent 当成普遍事实。", "howToUse": "每条原则同时写适用条件、反例或待验证项。", "boundary": "上下文再完整也不能替代外部事实核查。"}
+  ],
+  "discussion": [
+    {"heading": "摘要为何不够", "narrative": "讨论将摘要视为导航层，而不是足以直接驱动 Agent 行动的完整指令。", "anchors": ["00:08:30"]},
+    {"heading": "让 Agent 保持证据意识", "narrative": "对会议中的判断保留来源性质，要求 Agent 在扩展前指出假设并提出核验办法。", "anchors": ["00:31:15", "00:46:00"]}
+  ],
+  "actions": [
+    {"action": "把一个会议结论改写为五段式上下文", "owner": "读者", "when": "本周", "success": "Agent 能复述约束并列出待验证项"}
+  ],
+  "daoFaShuQiShi": {
+    "dao": {"label": "道", "summary": "与 Agent 协作的核心是建立共同语境，而非追求一句万能提示词。"},
+    "fa": {"label": "法", "summary": "用背景、任务、约束、证据、标准组织上下文。"},
+    "shu": {"label": "术", "summary": "显式标出观点性质、边界与追问。"},
+    "qi": {"label": "器", "summary": "可复制 Prompt、知识卡和结构化 JSON。"},
+    "shi": {"label": "势", "summary": "团队知识将越来越多地同时面向人类阅读与机器调用。"}
+  },
+  "agentKit": {
+    "context": "我没有参加原会议，已获得一份经过脱敏的知识提炼。内容中可能同时包含经验判断和待验证主张。",
+    "prompt": "你是一位会议知识教练。请阅读我随后提供的会议知识，先用三句话复述背景、目标和边界；再按道、法、术、器、势说明其结构；最后提出三个可执行实验和需要外部核验的事实。不得把会议观点改写成已证实事实。",
+    "questions": ["当前上下文缺少哪些会改变结论的信息？", "哪个原则可以在我的项目中做低成本实验？"],
+    "knowledgeCards": [{"name": "五段式上下文", "content": "背景说明为何讨论；任务说明要完成什么；约束划边界；证据标状态；输出标准定义可验收结果。"}]
+  },
+  "claimsToVerify": ["五段式上下文在所有 Agent 模型上都能提升回答质量"],
+  "limitations": ["本页为产品测试 fixture，所述方法尚未与真实团队效果数据比对。"],
+  "privacy": "完全虚构的演示材料，不含真实参会者或来源标识。",
+  "tags": ["AI Agent", "知识管理", "提示词"],
+  "sourceAnchors": [
+    {"time": "00:08:30", "note": "上下文结构"},
+    {"time": "00:31:15", "note": "不确定性标注"}
+  ]
+}

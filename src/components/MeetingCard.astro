@@ -1,0 +1,57 @@
+---
+import type { Meeting } from '@/lib/content';
+import { formatDate, statusLabels } from '@/lib/content';
+import { normalizeSearchText } from '@/lib/search';
+import { withBase } from '@/lib/paths';
+
+interface Props {
+  meeting: Meeting;
+  index?: number;
+  searchable?: boolean;
+}
+
+const { meeting, index = 0, searchable = false } = Astro.props;
+const searchableText = normalizeSearchText(
+  [
+    meeting.title,
+    meeting.abstract,
+    meeting.forAbsentees,
+    ...meeting.tags,
+    ...meeting.coreTopics.flatMap(({ title, explanation }) => [title, explanation])
+  ].join(' ')
+);
+---
+
+<article
+  class="meeting-card"
+  data-meeting-card={searchable ? '' : undefined}
+  data-search={searchable ? searchableText : undefined}
+  data-tags={searchable ? JSON.stringify(meeting.tags) : undefined}
+  style={`--card-index: ${index}`}
+>
+  <div class="meeting-card__index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</div>
+  <div class="meeting-card__body">
+    <div class="meeting-card__meta">
+      <time datetime={meeting.date}>{formatDate(meeting.date)}</time>
+      <span class:list={['status-chip', `status-chip--${meeting.contentStatus}`]}>
+        {statusLabels[meeting.contentStatus]}
+      </span>
+      <span>{meeting.duration}</span>
+    </div>
+    <h2>
+      <a href={withBase(`/meetings/${meeting.id}/`, import.meta.env.BASE_URL)}>{meeting.title}</a>
+    </h2>
+    <p class="meeting-card__absence">给缺席者：{meeting.forAbsentees}</p>
+    <p>{meeting.abstract}</p>
+    <ul class="tag-list" aria-label="标签">
+      {meeting.tags.map((tag) => <li>{tag}</li>)}
+    </ul>
+  </div>
+  <a
+    class="meeting-card__arrow"
+    href={withBase(`/meetings/${meeting.id}/`, import.meta.env.BASE_URL)}
+    aria-label={`阅读：${meeting.title}`}
+  >
+    <span aria-hidden="true">↗</span>
+  </a>
+</article>

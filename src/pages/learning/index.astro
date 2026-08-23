@@ -1,0 +1,67 @@
+---
+import ArchiveEmpty from '@/components/ArchiveEmpty.astro';
+import BaseLayout from '@/components/BaseLayout.astro';
+import { buildLearningPath, formatDate, loadMeetings } from '@/lib/content';
+import { withBase } from '@/lib/paths';
+
+const meetings = await loadMeetings();
+const learningPath = buildLearningPath(meetings);
+---
+
+<BaseLayout
+  title="八月阅读索引"
+  description="按录音日期索引 2026 年 8 月公开会议知识，并从策展学习地图进入证据审计、方法拆解与行动迁移。"
+  pageClass="learning-page"
+>
+  <header class="page-hero learning-hero shell">
+    <div class="section-number" aria-hidden="true">学</div>
+    <div>
+      <p class="eyebrow">MONTHLY LEARNING ROUTE</p>
+      <h1>八月阅读索引</h1>
+      <p>下方只按录音日期排列，不把时间顺序包装成教学顺序。想先定向、再拆解、最后迁移，请从策展学习地图进入。</p>
+      <a class="button button--primary" href={withBase('/insights/august-learning-path/', import.meta.env.BASE_URL)}>进入策展学习地图</a>
+    </div>
+    <aside class="learning-hero__note">
+      <span aria-hidden="true">读法</span>
+              <p>每场建议完成：<br />15 分钟核心速读<br />10 分钟 Agent 对流<br />1 个小行动</p>
+    </aside>
+  </header>
+
+  {learningPath.length > 0 ? (
+    <div class="learning-route shell">
+      {learningPath.map(({ sequence, stage, intention, meeting }, index) => (
+        <article class="learning-step" data-learning-step>
+          <div class="learning-step__track" aria-hidden="true">
+            <span>{String(sequence).padStart(2, '0')}</span>
+          </div>
+          <div class="learning-step__stage">
+            {index === 0 || learningPath[index - 1].stage !== stage ? (
+              <><span>{stage}</span><p>{intention}</p></>
+            ) : <span class="visually-hidden">{stage}</span>}
+          </div>
+          <div class="learning-step__content">
+            <div class="meeting-card__meta">
+              <time datetime={meeting.date}>{formatDate(meeting.date)}</time>
+              <span>{meeting.duration}</span>
+            </div>
+            <h2><a href={withBase(`/meetings/${meeting.id}/`, import.meta.env.BASE_URL)}>{meeting.title}</a></h2>
+            <p>{meeting.forAbsentees}</p>
+            <div class="learning-step__task">
+              <strong>本场练习</strong>
+              <span>{meeting.actions[0]?.action ?? '写下一条可以迁移到当前工作的原则。'}</span>
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+  ) : (
+    <div class="shell"><ArchiveEmpty /></div>
+  )}
+
+  <section class="learning-close shell">
+    <p class="eyebrow">AFTER READING</p>
+    <h2>时间索引负责找材料，<br />学习地图负责安排顺序。</h2>
+    <p>完成路径后，选一张知识卡交给 Agent：让它指出适用边界，并把原则改写成两周内可观察的小实验。</p>
+    <a class="button button--primary" href={withBase('/meetings/', import.meta.env.BASE_URL)}>选择一场会议</a>
+  </section>
+</BaseLayout>

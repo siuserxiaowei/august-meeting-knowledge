@@ -1,0 +1,61 @@
+---
+import SiteFooter from './SiteFooter.astro';
+import SiteHeader from './SiteHeader.astro';
+import { withBase } from '@/lib/paths';
+import '@/styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+  image?: string;
+  noindex?: boolean;
+  pageClass?: string;
+}
+
+const {
+  title,
+  description,
+  image = '/og-default.png',
+  noindex = false,
+  pageClass = ''
+} = Astro.props;
+const siteName = '八月会议知识场';
+const documentTitle = title === siteName ? title : `${title}｜${siteName}`;
+const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin);
+const ogImage = new URL(withBase(image, import.meta.env.BASE_URL), Astro.site ?? Astro.url.origin);
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f1ead8" />
+    <meta name="description" content={description} />
+    <meta name="robots" content={noindex ? 'noindex' : 'index,follow'} />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:site_name" content={siteName} />
+    <meta property="og:title" content={documentTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={documentTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <title>{documentTitle}</title>
+    <slot name="head" />
+  </head>
+  <body class={pageClass}>
+    <SiteHeader />
+    <main id="main-content" tabindex="-1">
+      <slot />
+    </main>
+    <SiteFooter />
+    <script is:inline>
+      document.documentElement.classList.add('has-js');
+    </script>
+  </body>
+</html>

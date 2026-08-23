@@ -1,0 +1,40 @@
+---
+import { withBase } from '@/lib/paths';
+
+const base = import.meta.env.BASE_URL;
+const pathname = Astro.url.pathname;
+const links = [
+  { href: '/', label: '知识场' },
+  { href: '/meetings/', label: '会议目录' },
+  { href: '/insights/', label: '月度洞察' },
+  { href: '/learning/', label: '学习路径' },
+  { href: '/coverage/', label: '覆盖边界' }
+];
+---
+
+<header class="site-header">
+  <a class="skip-link" href="#main-content">跳到主要内容</a>
+  <div class="shell site-header__inner">
+    <a class="brand" href={withBase('/', base)} aria-label="八月会议知识场首页">
+      <span class="brand__seal" aria-hidden="true">会<br />知</span>
+      <span class="brand__wordmark">
+        <strong>八月会议知识场</strong>
+        <small>AUGUST KNOWLEDGE ARCHIVE · 2026</small>
+      </span>
+    </a>
+    <nav class="primary-nav" aria-label="主导航">
+      {links.map((link) => {
+        const href = withBase(link.href, base);
+        const current =
+          link.href === '/'
+            ? pathname === href
+            : pathname === href || pathname.startsWith(href);
+        return (
+          <a href={href} aria-current={current ? 'page' : undefined}>
+            <span>{link.label}</span>
+          </a>
+        );
+      })}
+    </nav>
+  </div>
+</header>
